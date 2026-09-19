@@ -1,0 +1,713 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: BUILDVERSE marketplace API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: marketplace
+    description: Public marketplace and dashboard data
+  - name: projects
+    description: Client project workflow
+  - name: professionals
+    description: Professional profiles and matching
+  - name: proposals
+    description: Proposal workflow
+  - name: workspace
+    description: Accepted project collaboration
+  - name: account
+    description: Account and notifications
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [marketplace]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List marketplace projects
+      parameters:
+        - $ref: "#/components/parameters/Country"
+        - $ref: "#/components/parameters/City"
+        - $ref: "#/components/parameters/ProjectType"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create and publish a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project and its matches
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /professionals:
+    get:
+      operationId: listProfessionals
+      tags: [professionals]
+      summary: List professionals
+      parameters:
+        - $ref: "#/components/parameters/Country"
+        - $ref: "#/components/parameters/City"
+        - $ref: "#/components/parameters/Category"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          description: Professionals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Professional"
+  /professionals/{id}:
+    get:
+      operationId: getProfessional
+      tags: [professionals]
+      summary: Get a professional profile
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Professional profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionalDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /companies:
+    get:
+      operationId: listCompanies
+      tags: [marketplace]
+      summary: List design and construction companies
+      parameters:
+        - $ref: "#/components/parameters/Country"
+        - $ref: "#/components/parameters/City"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          description: Companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+  /proposals:
+    get:
+      operationId: listProposals
+      tags: [proposals]
+      summary: List proposals for the signed-in user
+      responses:
+        "200":
+          description: Proposals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proposal"
+  /projects/{id}/proposals:
+    post:
+      operationId: createProposal
+      tags: [proposals]
+      summary: Submit a proposal to a project
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalInput"
+      responses:
+        "201":
+          description: Submitted proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+  /proposals/{id}/action:
+    post:
+      operationId: actionProposal
+      tags: [proposals]
+      summary: Shortlist, reject, or accept a proposal
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalAction"
+      responses:
+        "200":
+          description: Updated proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalActionResult"
+  /contracts:
+    get:
+      operationId: listContracts
+      tags: [workspace]
+      summary: List contracts
+      responses:
+        "200":
+          description: Contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contract"
+  /workspace/{projectId}:
+    get:
+      operationId: getWorkspace
+      tags: [workspace]
+      summary: Get an accepted project workspace
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+  /workspace/{projectId}/tasks:
+    post:
+      operationId: createTask
+      tags: [workspace]
+      summary: Create a workspace task
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+  /workspace/{projectId}/milestones:
+    post:
+      operationId: createMilestone
+      tags: [workspace]
+      summary: Create a workspace milestone
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MilestoneInput"
+      responses:
+        "201":
+          description: Milestone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Milestone"
+  /workspace/{projectId}/messages:
+    post:
+      operationId: sendMessage
+      tags: [workspace]
+      summary: Send a workspace message
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /workspace/{projectId}/complete:
+    post:
+      operationId: completeProject
+      tags: [workspace]
+      summary: Mark a project completed
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Completed project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [account]
+      summary: Submit a project review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [account]
+      summary: List in-app notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+    Country:
+      name: country
+      in: query
+      schema:
+        type: string
+    City:
+      name: city
+      in: query
+      schema:
+        type: string
+    Category:
+      name: category
+      in: query
+      schema:
+        type: string
+    ProjectType:
+      name: projectType
+      in: query
+      schema:
+        type: string
+    Search:
+      name: search
+      in: query
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    Dashboard:
+      type: object
+      required: [role, stats, recentActivity, featuredProjects, featuredProfessionals]
+      properties:
+        role: { type: string }
+        stats:
+          type: object
+          required: [activeProjects, proposals, matches, unreadMessages]
+          properties:
+            activeProjects: { type: number }
+            proposals: { type: number }
+            matches: { type: number }
+            unreadMessages: { type: number }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/Activity" }
+        featuredProjects:
+          type: array
+          items: { $ref: "#/components/schemas/Project" }
+        featuredProfessionals:
+          type: array
+          items: { $ref: "#/components/schemas/Professional" }
+    Activity:
+      type: object
+      required: [id, title, description, date, kind]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        date: { type: string }
+        kind: { type: string }
+    Project:
+      type: object
+      required: [id, title, description, country, city, projectType, area, budget, currency, timeline, requiredServices, status, createdAt, matchCount]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        country: { type: string }
+        city: { type: string }
+        region: { type: ["string", "null"] }
+        projectType: { type: string }
+        area: { type: number }
+        budget: { type: number }
+        currency: { type: string }
+        timeline: { type: string }
+        requiredServices:
+          type: array
+          items: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+        matchCount: { type: number }
+        clientName: { type: string }
+    ProjectInput:
+      type: object
+      required: [title, description, country, city, projectType, area, budget, currency, timeline, requiredServices]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        country: { type: string }
+        city: { type: string }
+        region: { type: string }
+        projectType: { type: string }
+        area: { type: number }
+        budget: { type: number }
+        currency: { type: string }
+        timeline: { type: string }
+        requiredServices:
+          type: array
+          items: { type: string }
+    ProjectDetail:
+      allOf:
+        - $ref: "#/components/schemas/Project"
+        - type: object
+          required: [matches, proposals]
+          properties:
+            matches:
+              type: array
+              items: { $ref: "#/components/schemas/Match" }
+            proposals:
+              type: array
+              items: { $ref: "#/components/schemas/Proposal" }
+    Match:
+      type: object
+      required: [id, professional, score, reasons]
+      properties:
+        id: { type: string }
+        professional: { $ref: "#/components/schemas/Professional" }
+        score: { type: number }
+        reasons:
+          type: array
+          items: { type: string }
+    Professional:
+      type: object
+      required: [id, name, category, specialization, country, city, experience, portfolioCount, completedProjects, trustScore, verificationStatus, availability, avatar]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        specialization: { type: string }
+        country: { type: string }
+        city: { type: string }
+        experience: { type: number }
+        portfolioCount: { type: number }
+        completedProjects: { type: number }
+        trustScore: { type: number }
+        verificationStatus: { type: string }
+        availability: { type: string }
+        avatar: { type: string }
+    ProfessionalDetail:
+      allOf:
+        - $ref: "#/components/schemas/Professional"
+        - type: object
+          required: [bio, services, portfolio]
+          properties:
+            bio: { type: string }
+            services:
+              type: array
+              items: { type: string }
+            portfolio:
+              type: array
+              items: { $ref: "#/components/schemas/PortfolioProject" }
+    PortfolioProject:
+      type: object
+      required: [id, name, projectType, country, city, area, year, services, description, image]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        projectType: { type: string }
+        country: { type: string }
+        city: { type: string }
+        area: { type: number }
+        year: { type: number }
+        services:
+          type: array
+          items: { type: string }
+        description: { type: string }
+        image: { type: string }
+    Company:
+      type: object
+      required: [id, name, location, services, projectCount, verified, avatar]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        location: { type: string }
+        services:
+          type: array
+          items: { type: string }
+        projectCount: { type: number }
+        verified: { type: boolean }
+        avatar: { type: string }
+    Proposal:
+      type: object
+      required: [id, projectId, projectTitle, professionalId, professionalName, fee, currency, timeline, scope, deliverables, message, status, createdAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        projectTitle: { type: string }
+        professionalId: { type: string }
+        professionalName: { type: string }
+        fee: { type: number }
+        currency: { type: string }
+        timeline: { type: string }
+        scope: { type: string }
+        deliverables:
+          type: array
+          items: { type: string }
+        message: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+    ProposalInput:
+      type: object
+      required: [fee, currency, timeline, scope, deliverables, message]
+      properties:
+        fee: { type: number }
+        currency: { type: string }
+        timeline: { type: string }
+        scope: { type: string }
+        deliverables:
+          type: array
+          items: { type: string }
+        message: { type: string }
+    ProposalAction:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [SHORTLIST, REJECT, ACCEPT]
+    ProposalActionResult:
+      type: object
+      required: [proposal, contract]
+      properties:
+        proposal: { $ref: "#/components/schemas/Proposal" }
+        contract: { oneOf: [{ $ref: "#/components/schemas/Contract" }, { type: "null" }] }
+    Contract:
+      type: object
+      required: [id, projectId, projectTitle, clientName, professionalName, fee, currency, scope, startDate, endDate, status]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        projectTitle: { type: string }
+        clientName: { type: string }
+        professionalName: { type: string }
+        fee: { type: number }
+        currency: { type: string }
+        scope: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        status: { type: string }
+    Workspace:
+      type: object
+      required: [project, contract, tasks, milestones, messages, documents]
+      properties:
+        project: { $ref: "#/components/schemas/Project" }
+        contract: { $ref: "#/components/schemas/Contract" }
+        tasks:
+          type: array
+          items: { $ref: "#/components/schemas/Task" }
+        milestones:
+          type: array
+          items: { $ref: "#/components/schemas/Milestone" }
+        messages:
+          type: array
+          items: { $ref: "#/components/schemas/Message" }
+        documents:
+          type: array
+          items: { $ref: "#/components/schemas/Document" }
+    Task:
+      type: object
+      required: [id, title, assignee, dueDate, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        assignee: { type: string }
+        dueDate: { type: string }
+        status: { type: string }
+    TaskInput:
+      type: object
+      required: [title, assignee, dueDate]
+      properties:
+        title: { type: string }
+        assignee: { type: string }
+        dueDate: { type: string }
+    Milestone:
+      type: object
+      required: [id, title, dueDate, amount, currency, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        dueDate: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status: { type: string }
+    MilestoneInput:
+      type: object
+      required: [title, dueDate, amount, currency]
+      properties:
+        title: { type: string }
+        dueDate: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+    Message:
+      type: object
+      required: [id, sender, text, date]
+      properties:
+        id: { type: string }
+        sender: { type: string }
+        text: { type: string }
+        date: { type: string }
+    MessageInput:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string }
+    Document:
+      type: object
+      required: [id, name, type, date]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+        date: { type: string }
+    Review:
+      type: object
+      required: [id, projectId, rating, comment, createdAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        rating: { type: number }
+        comment: { type: string }
+        createdAt: { type: string }
+    ReviewInput:
+      type: object
+      required: [projectId, rating, comment]
+      properties:
+        projectId: { type: string }
+        rating: { type: number, minimum: 1, maximum: 5 }
+        comment: { type: string }
+    Notification:
+      type: object
+      required: [id, title, description, date, read, kind]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        date: { type: string }
+        read: { type: boolean }
+        kind: { type: string }
+
